@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Savvy Suitcase Search</title>
+<style>
+body { font-family: Arial, sans-serif; margin:0; padding:0; }
+select, input, button { margin:5px; padding:5px; font-size:14px; }
+.repeater { display:flex; flex-wrap:wrap; }
+.card { border:1px solid #ccc; margin:5px; padding:10px; width:calc(50% - 20px); box-sizing:border-box; }
+.card img { width:100%; height:auto; }
+@media(max-width:600px){ .card{ width:100%; } }
+</style>
+</head>
+<body>
+
+<h2>Search Holidays</h2>
+<select id="departureDropdown"></select>
+<select id="destinationDropdown"></select>
+<input type="date" id="startDatePicker">
+<input type="date" id="endDatePicker">
+<button id="searchButton">Search</button>
+<select id="categoryTabs">
+  <option value="flights">Flights</option>
+  <option value="packages">Packages</option>
+  <option value="hotels">Hotels</option>
+  <option value="cruises">Cruises</option>
+  <option value="cars">Cars</option>
+</select>
+
+<div class="repeater" id="partnersRepeater"></div>
+
+<script>
+let partners = {
+  "flights":[
+    {"name":"Etihad Holidays","destination":"Dubai","departure":"LHR","startDate":"2026-06-01","endDate":"2026-06-10","price":"£750","desc":"Return flight from London to Dubai.","img":"https://via.placeholder.com/300x200?text=Dubai+Flight"},
+    {"name":"Jet2holidays","destination":"Majorca","departure":"MAN","startDate":"2026-07-15","endDate":"2026-07-22","price":"£350","desc":"Return flight from Manchester to Majorca.","img":"https://via.placeholder.com/300x200?text=Majorca+Flight"}
+    // ...add remaining flight partners here
+  ],
+  "packages":[
+    {"name":"Abercrombie and Kent","destination":"Paris","departure":"LHR","startDate":"2026-05-10","endDate":"2026-05-17","price":"£1200","desc":"Luxury Paris package including hotel and sightseeing.","img":"https://via.placeholder.com/300x200?text=Paris+Package"},
+    {"name":"Trafalgar","destination":"Rome","departure":"LGW","startDate":"2026-06-05","endDate":"2026-06-12","price":"£950","desc":"Guided Rome tour with hotel and excursions.","img":"https://via.placeholder.com/300x200?text=Rome+Package"}
+    // ...add remaining package partners here
+  ],
+  "hotels":[
+    {"name":"Plum Guide","destination":"Barcelona","departure":"STN","startDate":"2026-08-01","endDate":"2026-08-07","price":"£600","desc":"Luxury hotel in central Barcelona.","img":"https://via.placeholder.com/300x200?text=Barcelona+Hotel"}
+    // ...add remaining hotel partners
+  ],
+  "cruises":[
+    {"name":"Celebrity Cruises","destination":"Caribbean","departure":"LHR","startDate":"2026-12-01","endDate":"2026-12-15","price":"£2500","desc":"All-inclusive Caribbean cruise.","img":"https://via.placeholder.com/300x200?text=Caribbean+Cruise"}
+    // ...add remaining cruise partners
+  ],
+  "cars":[
+    {"name":"Flexible Autos","destination":"Mallorca","departure":"MAN","startDate":"2026-07-01","endDate":"2026-07-07","price":"£150","desc":"Compact car hire in Mallorca.","img":"https://via.placeholder.com/300x200?text=Mallorca+Car+Hire"}
+    // ...add remaining car hire partners
+  ]
+};
+
+// Populate departure dropdown
+const departureDropdown = document.getElementById("departureDropdown");
+const ukAirports = ["LHR","LGW","MAN","BFS","EDI","BHX","GLA","STN","LTN","SEN"];
+ukAirports.forEach(code => {
+  const opt = document.createElement("option"); opt.value = code; opt.textContent = code; departureDropdown.appendChild(opt);
+});
+
+// Populate destination dropdown
+const destinationDropdown = document.getElementById("destinationDropdown");
+function populateDestinations(){
+  const allDestinations = new Set();
+  ["flights","packages","hotels","cruises","cars"].forEach(cat=>{
+    if(partners[cat]) partners[cat].forEach(item=>allDestinations.add(item.destination));
+  });
+  destinationDropdown.innerHTML = "";
+  Array.from(allDestinations).forEach(dest=>{
+    const opt = document.createElement("option"); opt.value = dest; opt.textContent = dest; destinationDropdown.appendChild(opt);
+  });
+}
+populateDestinations();
+
+// Repeater and helpers
+const repeater = document.getElementById("partnersRepeater");
+const categoryTabs = document.getElementById("categoryTabs");
+const searchButton = document.getElementById("searchButton");
+
+function displayPartners(category){
+  const items = partners[category] || [];
+  updateRepeater(items);
+}
+
+function updateRepeater(items){
+  repeater.innerHTML = "";
+  items.forEach(item=>{
+    const card = document.createElement("div"); card.className="card";
+    card.innerHTML = `<img src="${item.img}" alt="${item.destination}">
+                      <h4>${item.destination}</h4>
+                      <p>${item.desc}</p>
+                      <p><strong>${item.price}</strong></p>`;
+    repeater.appendChild(card);
+  });
+}
+
+// Category change
+categoryTabs.addEventListener("change", e=>displayPartners(e.target.value));
+
+// Search button
+searchButton.addEventListener("click", ()=>{
+  const departure = departureDropdown.value;
+  const destination = destinationDropdown.value;
+  const startDate = startDatePicker.value;
+  const endDate = endDatePicker.value;
+  const category = categoryTabs.value;
+  const filtered = (partners[category]||[]).filter(item=>{
+    let match = true;
+    if(destination) match = match && item.destination===destination;
+    if(departure && item.departure) match = match && item.departure===departure;
+    if(startDate && endDate && item.startDate && item.endDate){
+      const s=new Date(item.startDate), e=new Date(item.endDate), sd=new Date(startDate), ed=new Date(endDate);
+      match = match && (e>=sd && s<=ed);
+    }
+    return match;
+  });
+  updateRepeater(filtered);
+});
+
+displayPartners("flights"); // default
+</script>
+
+</body>
+</html>
