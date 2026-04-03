@@ -1,0 +1,115 @@
+[09:06, 03/04/2026] Savvy Suitcase: const axios = require('axios');
+const csv = require('csvtojson');
+const fs = require('fs');
+
+// List of all InteleTravel partners with placeholder URLs
+const partnerFeeds = [
+  {name:"Abercrombie and Kent", url:"https://example.com/ak.csv", type:"packages"},
+  {name:"Ambassador", url:"https://example.com/ambassador.csv", type:"packages"},
+  {name:"Avalon Waterways", url:"https://example.com/avalon.csv", type:"packages"},
+  {name:"Celebrity Cruises", url:"https://example.com/celebrity.csv", type:"cruises"},
+  {name:"Classic Collection", url:"https://example.com/classic.csv", type:"hotels"},
+  {name:"Club Med", url:"https://example.com/clubmed.csv", type:"hotels"},
+  {name:"Contiki", url:"https://example.com/contiki.csv", type:"packages"},
+  {name:"Cosmos & Globus", url:"https://example.com/cosmos.csv", type:"packages"},
+  {name:"Costsaver", url:"https://example.com/costsaver.csv", type:"cars"},
+  {name:"Etihad Holidays", url:"https://example.com/etihad.csv", type:"flights"},
+  {name:"Expedia TAAP", url:"https://example.com/expedia.csv", type:"flights"},
+  {name:"Flexible Autos", url:"https://example.com/flexible.csv", type:"cars"},
+  {name:"Fred.Olsen", url:"https://example.com/fred.csv", type:"cruises"},
+  {name:"Gold Medal Travel Group", url:"https://example.com/gold.csv", type:"packages"},
+  {name:"Holland America Line", url:"https://example.com/holland.csv", type:"cruises"},
+  {name:"Holiday Extras", url:"https://example.com/holidayextras.csv", type:"cars"},
+  {name:"Hoseasons", url:"https://example.com/hoseasons.csv", type:"hotels"},
+  {name:"Hurtigruten", url:"https://example.com/hurtigruten.csv", type:"cruises"},
+  {name:"Inghams", url:"https://example.com/inghams.csv", type:"packages"},
+  {name:"Insight Vacations", url:"https://example.com/insight.csv", type:"packages"},
+  {name:"Instant Breaks", url:"https://example.com/instant.csv", type:"packages"},
+  {name:"Jet2holidays", url:"https://example.com/jet2.csv", type:"flights"},
+  {name:"JTA Holidays", url:"https://example.com/jta.csv", type:"packages"},
+  {name:"Leger", url:"https://example.com/leger.csv", type:"packages"},
+  {name:"London Theatre District", url:"https://example.com/london.csv", type:"packages"},
+  {name:"Luxury Gold", url:"https://example.com/luxurygold.csv", type:"packages"},
+  {name:"Major Travel", url:"https://example.com/major.csv", type:"packages"},
+  {name:"Mr & Mrs Smith", url:"https://example.com/mrsmith.csv", type:"hotels"},
+  {name:"MSC Cruises", url:"https://example.com/msc.csv", type:"cruises"},
+  {name:"Newmarket Holidays", url:"https://example.com/newmarket.csv", type:"packages"},
+  {name:"Norwegian Cruise Line", url:"https://example.com/ncl.csv", type:"cruises"},
+  {name:"Not In the Guidebooks", url:"https://example.com/notin.csv", type:"packages"},
+  {name:"Ocean Florida", url:"https://example.com/ocean.csv", type:"packages"},
+  {name:"Oceania Cruises", url:"https://example.com/oceania.csv", type:"cruises"},
+  {name:"Olympic Holidays", url:"https://example.com/olympic.csv", type:"packages"},
+  {name:"Plum Guide", url:"https://example.com/plum.csv", type:"hotels"},
+  {name:"Princess Cruises", url:"https://example.com/princess.csv", type:"cruises"},
+  {name:"Railbookers", url:"https://example.com/railbookers.csv", type:"packages"},
+  {name:"RateHawk", url:"https://example.com/ratehawk.csv", type:"hotels"},
+  {name:"Red Sea Holidays", url:"https://example.com/redsea.csv", type:"packages"},
+  {name:"Royal Caribbean", url:"https://example.com/royal.csv", type:"cruises"},
+  {name:"Rivieria Travel", url:"https://example.com/rivieria.csv", type:"packages"},
+  {name:"Sardatur Holidays", url:"https://example.com/sardatur.csv", type:"packages"},
+  {name:"Shearings", url:"https://example.com/shearings.csv", type:"packages"},
+  {name:"Silversea Cruises", url:"https://example.com/silversea.csv", type:"cruises"},
+  {name:"Solmar Villas", url:"https://example.com/solmar.csv", type:"hotels"},
+  {name:"Sportsbreaks.com", url:"https://example.com/sportsbreaks.csv", type:"packages"},
+  {name:"Trafalgar", url:"https://example.com/trafalgar.csv", type:"packages"},
+  {name:"Travel Solutions", url:"https://example.com/travelsolutions.csv", type:"packages"},
+  {name:"USAirtours", url:"https://example.com/usairtours.csv", type:"packages"},
+  {name:"Virgin Voyages", url:"https://example.com/virginvoyages.csv", type:"cruises"},
+  {name:"Virgin Voyages Store", url:"https://example.com/virginstore.csv", type:"cruises"},
+  {name:"Wendy Wu Tours", url:"https://example.com/wendy.csv", type:"packages"}
+];
+
+const csvtojson = csv;
+
+async function updateJSON() {
+  let partnersData = { flights: [], packages: [], hotels: [], cruises: [], cars: [] };
+
+  for(const partner of partnerFeeds){
+    try {
+      const response = await axios.get(partner.url);
+      let data = [];
+
+      if(partner.url.endsWith(".csv")){
+        data = await csvtojson().fromString(response.data);
+      } else {
+        data = response.data;
+      }
+
+      data.forEach(item => {
+        partnersData[partner.type].push({
+          name: partner.name,
+          destination: item.destination || "Unknown",
+          price: item.price || "N/A",
+          img: item.img || "https://via.placeholder.com/200x120",
+          desc: item.description || ""
+        });
+      });
+
+    } catch(err){
+      console.error(Error fetching ${partner.name}: ${err.message});
+    }
+  }
+
+  fs.writeFileSync('partners.json', JSON.stringify(partnersData, null, 2));
+  console.log('partners.json updated successfully!');
+}
+
+updateJSON();
+[09:11, 03/04/2026] Savvy Suitcase: // Fetch partners JSON from GitHub
+let partners = [];
+
+fetch("https://bizzle.github.io/build/savvysuitcase-partners/partners.json")
+  .then(res => res.json())
+  .then(data => {
+    partners = data;
+    console.log("Partners loaded:", partners);
+    displayPartners(); // call your function to populate Wix elements
+  })
+  .catch(err => console.error("Failed to load partners:", err));
+
+// Example function to display partners in a repeater
+function displayPartners() {
+  // Assuming you have a repeater called #partnersRepeater
+  $w("#partnersRepeater").data = partners.packages; // or flights, hotels, etc.
+}
+[09:55, 03/04/2026] Savvy Suitcase: 
